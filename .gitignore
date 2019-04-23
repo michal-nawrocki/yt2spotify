@@ -1,2 +1,4 @@
 credentials.cs
 client_secrets.json
+bin/
+obj/

@@ -12,24 +12,12 @@ namespace yt2spotify{
 
     class SpotifyCreater{
 
-        private static string _clientId = ""; //"";
-        private static string _secretId = ""; //"";
-
         // ReSharper disable once UnusedParameter.Local
-        static void Main(string[] args)
-        {
-            _clientId = string.IsNullOrEmpty(_clientId)
-                ? Environment.GetEnvironmentVariable("SPOTIFY_CLIENT_ID")
-                : _clientId;
+        static void Main(string[] args){
 
-            _secretId = string.IsNullOrEmpty(_secretId)
-                ? Environment.GetEnvironmentVariable("SPOTIFY_SECRET_ID")
-                : _secretId;
 
             Console.WriteLine("####### Spotify API Example #######");
             Console.WriteLine("This example uses AuthorizationCodeAuth.");
-            Console.WriteLine(
-                "Tip: If you want to supply your ClientID and SecretId beforehand, use env variables (SPOTIFY_CLIENT_ID and SPOTIFY_SECRET_ID)");
 
             AuthorizationCodeAuth auth =
                 new AuthorizationCodeAuth(Credentials.SP_id, Credentials.SP_key, "http://localhost:4002", "http://localhost:4002",
@@ -60,9 +48,15 @@ namespace yt2spotify{
         {
             PrivateProfile profile = await api.GetPrivateProfileAsync();
             string name = string.IsNullOrEmpty(profile.DisplayName) ? profile.Id : profile.DisplayName;
+            string profileId = profile.Id;
             Console.WriteLine($"Hello there, {name}!");
 
+            Console.WriteLine("Will create a new playlist with name \"Test xD\"");
             
+            FullPlaylist playlist = api.CreatePlaylist(profileId, "Test xD", false);
+            if(!playlist.HasError())
+            Console.WriteLine("Playlist-URI: " + playlist.Uri);
         }
+        
     }
 }
