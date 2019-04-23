@@ -1,6 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+      <PackageReference Include="Google.Apis" Version="1.38.2" />
+      <PackageReference Include="Google.Apis.Drive.v3" Version="1.38.2.1566" />
+      <PackageReference Include="Google.Apis.YouTube.v3" Version="1.38.2.1565" />
       <PackageReference Include="System.Runtime.Serialization.Json" Version="4.3.0" />
       <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
    </ItemGroup>

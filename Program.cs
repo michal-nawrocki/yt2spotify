@@ -1,42 +1,82 @@
 ﻿using System;
-using System.Threading.Tasks;
-using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Collections.Generic;
-using System.Runtime.Serialization.Json;
+using System.IO;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
+
+using Google.Apis.Auth.OAuth2;
+using Google.Apis.Services;
+using Google.Apis.Upload;
+using Google.Apis.Util.Store;
+using Google.Apis.YouTube.v3;
+using Google.Apis.YouTube.v3.Data;
 
 namespace yt2spotify{
 
-    class Program{
+  class YTRetriever{
 
-        private static readonly HttpClient client = new HttpClient();
+    static void Main(string[] args){
 
-        static void Main(string[] args){
-            var repositories = ProcessRepositories().Result;
+      Console.WriteLine("YT2Spotify playlist maker");
+      Console.WriteLine("========================");
+      Console.Write("Please enter the URL of the your chosen YT video: ");
+      string videoURL = getVideoID(Console.ReadLine());
+      Console.WriteLine();
+      Console.WriteLine("The video id is: " + videoURL);
 
-            foreach(var repo in repositories){
-                Console.WriteLine(repo.Name);
-                Console.WriteLine(repo.Description);
-                Console.WriteLine(repo.GitHubHomeUrl);
-                Console.WriteLine(repo.Homepage);
-                Console.WriteLine(repo.Watchers);
-                Console.WriteLine(repo.LastPush);
-                Console.WriteLine();
-            }
+      try{
+        new YTRetriever().Run(videoURL).Wait();
+      }
+      catch (AggregateException ex){
+        foreach (var e in ex.InnerExceptions){
+          Console.WriteLine("Error: " + e.Message);
         }
+      }
 
-        private static async Task<List<Repository>> ProcessRepositories(){
-            client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Accept.Add(
-                new MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
-            client.DefaultRequestHeaders.Add("User-Agent", ".NET Foundation Repository Reporter");
+      Console.WriteLine("Press any key to continue...");
+      Console.ReadKey();
+    }
 
-            var serializer = new DataContractJsonSerializer(typeof(List<Repository>));
+    // Obtain description from YT REST API
+    private async Task Run(string videoID){
+        var youtubeService = new YouTubeService(new BaseClientService.Initializer(){
+            ApiKey = Credentials.YT_key,
+            ApplicationName = this.GetType().ToString()
+        });
 
-            var streamTask = client.GetStreamAsync("https://api.github.com/orgs/dotnet/repos");
-            var repositories = serializer.ReadObject(await streamTask) as List<Repository>;
+        var videoDescriptionRequest = youtubeService.Videos.List("snippet");
+        videoDescriptionRequest.Id = videoID;
 
-            return repositories;
+        var videoDescriptionResponse = await videoDescriptionRequest.ExecuteAsync();
+
+        Console.WriteLine("Obtained following description:");
+        foreach(var element in videoDescriptionResponse.Items){
+            Console.WriteLine(element.Snippet.Description);
         }
     }
+
+    // Handling a very basic filter to retrieve the videoURL
+    private static string getVideoID(string url){
+        string output = "";
+
+        if(url.Contains("youtu.be/")){
+            int begIndex = url.IndexOf(".be/") + 4;
+            output = url.Substring(begIndex);
+        }else if(url.Contains("watch?v=")){
+            int begIndex = url.IndexOf("?v=") + 3;
+            output = url.Substring(begIndex);
+
+            if(output.Contains("&")){
+                int endIndex = output.IndexOf("&");
+                output = output.Substring(0,endIndex);
+            }
+        }else{
+            //TODO
+            // return errorMessage
+        }
+        
+        return output;
+    }
+  }
 }
