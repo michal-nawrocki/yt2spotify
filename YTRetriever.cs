@@ -12,12 +12,19 @@ using Google.Apis.Util.Store;
 using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;
 
+using SpotifyAPI.Web.Enums;
+using SpotifyAPI.Web.Models;
+
 namespace yt2spotify{
 
   class YTRetriever{
 
+/*
     static void Main(string[] args){
-
+        runRetriever();
+    }
+*/
+    static void runRetriever(){
       Console.WriteLine("YT2Spotify playlist maker");
       Console.WriteLine("========================");
       Console.Write("Please enter the URL of the your chosen YT video: ");
