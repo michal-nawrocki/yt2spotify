@@ -21,7 +21,7 @@ namespace yt2spotify{
 
             AuthorizationCodeAuth auth =
                 new AuthorizationCodeAuth(Credentials.SP_id, Credentials.SP_key, "http://localhost:4002", "http://localhost:4002",
-                    Scope.PlaylistReadPrivate | Scope.PlaylistReadCollaborative);
+                    Scope.PlaylistModifyPrivate);
             auth.AuthReceived += AuthOnAuthReceived;
             auth.Start();
             auth.OpenBrowser();
@@ -39,12 +39,13 @@ namespace yt2spotify{
             SpotifyWebAPI api = new SpotifyWebAPI
             {
                 AccessToken = token.AccessToken,
-                TokenType = token.TokenType
+                TokenType = token.TokenType,
+
             };
-            PrintUsefulData(api);
+            CreatePlaylist(api);
         }
 
-        private static async void PrintUsefulData(SpotifyWebAPI api)
+        private static async void CreatePlaylist(SpotifyWebAPI api)
         {
             PrivateProfile profile = await api.GetPrivateProfileAsync();
             string name = string.IsNullOrEmpty(profile.DisplayName) ? profile.Id : profile.DisplayName;
@@ -57,6 +58,5 @@ namespace yt2spotify{
             if(!playlist.HasError())
             Console.WriteLine("Playlist-URI: " + playlist.Uri);
         }
-        
     }
 }
