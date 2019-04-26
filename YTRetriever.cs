@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,24 +17,24 @@ using SpotifyAPI.Web.Enums;
 using SpotifyAPI.Web.Models;
 
 namespace yt2spotify{
-
   class YTRetriever{
+    
+    private static string description = "";
 
-/*
     static void Main(string[] args){
-        runRetriever();
+      RunRetriever();
     }
-*/
-    static void runRetriever(){
+
+    static void RunRetriever(){
       Console.WriteLine("YT2Spotify playlist maker");
       Console.WriteLine("========================");
       Console.Write("Please enter the URL of the your chosen YT video: ");
-      string videoURL = getVideoID(Console.ReadLine());
+      string videoURL = GetVideoID(Console.ReadLine());
       Console.WriteLine();
       Console.WriteLine("The video id is: " + videoURL);
 
       try{
-        new YTRetriever().Run(videoURL).Wait();
+        description = new YTRetriever().Run(videoURL).Result;
       }
       catch (AggregateException ex){
         foreach (var e in ex.InnerExceptions){
@@ -41,30 +42,40 @@ namespace yt2spotify{
         }
       }
 
+      if(description.Length == 0){
+        //TODO Error handling, for now just exit
+        Console.WriteLine("ERROR: Didnt recieve anything from the YT API");
+        Environment.Exit(1);
+      }
+
+      List<string> trackNames = GetTrackNames(description);
+
       Console.WriteLine("Press any key to continue...");
       Console.ReadKey();
     }
 
     // Obtain description from YT REST API
-    private async Task Run(string videoID){
-        var youtubeService = new YouTubeService(new BaseClientService.Initializer(){
-            ApiKey = Credentials.YT_key,
-            ApplicationName = this.GetType().ToString()
-        });
+    private async Task<string> Run(string videoID){
+      var youtubeService = new YouTubeService(new BaseClientService.Initializer(){
+          ApiKey = Credentials.YT_key,
+          ApplicationName = this.GetType().ToString()
+      });
 
-        var videoDescriptionRequest = youtubeService.Videos.List("snippet");
-        videoDescriptionRequest.Id = videoID;
+      var videoDescriptionRequest = youtubeService.Videos.List("snippet");
+      videoDescriptionRequest.Id = videoID;
 
-        var videoDescriptionResponse = await videoDescriptionRequest.ExecuteAsync();
+      var videoDescriptionResponse = await videoDescriptionRequest.ExecuteAsync();
 
-        Console.WriteLine("Obtained following description:");
-        foreach(var element in videoDescriptionResponse.Items){
-            Console.WriteLine(element.Snippet.Description);
-        }
+      Console.WriteLine("Obtained following description:");
+      foreach(var element in videoDescriptionResponse.Items){
+          Console.WriteLine(element.Snippet.Description);
+      }
+
+      return videoDescriptionResponse.Items[0].Snippet.Description;
     }
 
     // Handling a very basic filter to retrieve the videoURL
-    private static string getVideoID(string url){
+    private static string GetVideoID(string url){
         string output = "";
 
         if(url.Contains("youtu.be/")){
@@ -85,5 +96,28 @@ namespace yt2spotify{
         
         return output;
     }
+  
+    // Retrieve individual song names from the description
+    private static List<string> GetTrackNames(string description){
+      List<string> trackNames = new List<string>();
+      var regex = @"(:\d\d)";
+
+      string[] lines = description.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+
+      Console.WriteLine("All tracks in the description:\n\n");
+      foreach(string line in lines){
+        var validate = Regex.Match(line, regex, RegexOptions.IgnoreCase);
+
+        if(validate.Success){
+          //Just get the track name, which is after the time stamp
+          string[] splits = Regex.Split(line, @"(:\d\d) ");
+
+          trackNames.Add(splits[splits.Length-1]);
+        }
+      }
+
+      return trackNames;
+    }
+  
   }
 }

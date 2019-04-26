@@ -14,9 +14,8 @@ namespace yt2spotify{
 
         private static string profileId = "";
         private static string playlistId = "";
-
-        // ReSharper disable once UnusedParameter.Local
-        static void Main(string[] args){
+        
+        static void run(string[] args){
             Console.WriteLine("####### Spotify API Example #######");
             Console.WriteLine("This example uses AuthorizationCodeAuth.");
 
@@ -27,6 +26,12 @@ namespace yt2spotify{
             auth.Start();
             auth.OpenBrowser();
 
+            // Do stuff here
+
+
+
+
+            // After this will close itself
             Console.ReadLine();
             auth.Stop(0);
         }
@@ -78,6 +83,16 @@ namespace yt2spotify{
 
         private static async Task AddSongToPlaylist(SpotifyWebAPI api, string playlistID, string songID){
             ErrorResponse response = await api.AddPlaylistTrackAsync(playlistID, songID);
+            if(!response.HasError()){
+                Console.WriteLine("Success");
+            }else{
+                Console.WriteLine(response.Error.Message);
+            }
+        }
+
+        private static async Task AddSongsToPlaylist(SpotifyWebAPI api, string playlistID, List<string> songIDs){
+            ErrorResponse response = await api.AddPlaylistTracksAsync(playlistID, songIDs);
+
             if(!response.HasError()){
                 Console.WriteLine("Success");
             }else{
