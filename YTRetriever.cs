@@ -18,20 +18,11 @@ using SpotifyAPI.Web.Models;
 
 namespace yt2spotify{
   class YTRetriever{
-    
-    private static string description = "";
 
-    static void Main(string[] args){
-      RunRetriever();
-    }
-
-    static void RunRetriever(){
-      Console.WriteLine("YT2Spotify playlist maker");
-      Console.WriteLine("========================");
-      Console.Write("Please enter the URL of the your chosen YT video: ");
-      string videoURL = GetVideoID(Console.ReadLine());
-      Console.WriteLine();
-      Console.WriteLine("The video id is: " + videoURL);
+    // Obtain List of track name's of the given YT video
+    public static List<string> GetTrackList(string url){
+      string description = "";
+      string videoURL = GetVideoID(url);
 
       try{
         description = new YTRetriever().Run(videoURL).Result;
@@ -48,10 +39,7 @@ namespace yt2spotify{
         Environment.Exit(1);
       }
 
-      List<string> trackNames = GetTrackNames(description);
-
-      Console.WriteLine("Press any key to continue...");
-      Console.ReadKey();
+      return GetTrackNames(description);
     }
 
     // Obtain description from YT REST API
@@ -65,11 +53,6 @@ namespace yt2spotify{
       videoDescriptionRequest.Id = videoID;
 
       var videoDescriptionResponse = await videoDescriptionRequest.ExecuteAsync();
-
-      Console.WriteLine("Obtained following description:");
-      foreach(var element in videoDescriptionResponse.Items){
-          Console.WriteLine(element.Snippet.Description);
-      }
 
       return videoDescriptionResponse.Items[0].Snippet.Description;
     }
@@ -104,7 +87,6 @@ namespace yt2spotify{
 
       string[] lines = description.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
 
-      Console.WriteLine("All tracks in the description:\n\n");
       foreach(string line in lines){
         var validate = Regex.Match(line, regex, RegexOptions.IgnoreCase);
 
@@ -116,6 +98,7 @@ namespace yt2spotify{
         }
       }
 
+      Console.WriteLine("Number of track names: " + trackNames.Count);
       return trackNames;
     }
   
