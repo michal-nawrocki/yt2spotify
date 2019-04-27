@@ -19,6 +19,12 @@ using SpotifyAPI.Web.Models;
 namespace yt2spotify{
   class YTRetriever{
 
+    private static string videoTitle = "";
+
+    public static string GetVideoTitle(){
+      return videoTitle;
+    }
+
     // Obtain List of track name's of the given YT video
     public static List<string> GetTrackList(string url){
       string description = "";
@@ -53,6 +59,8 @@ namespace yt2spotify{
       videoDescriptionRequest.Id = videoID;
 
       var videoDescriptionResponse = await videoDescriptionRequest.ExecuteAsync();
+
+      videoTitle = videoDescriptionResponse.Items[0].Snippet.Title;
 
       return videoDescriptionResponse.Items[0].Snippet.Description;
     }

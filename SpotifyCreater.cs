@@ -14,6 +14,7 @@ namespace yt2spotify{
 
         private static string profileId = "";
         private static string playlistId = "";
+        private static string playlistName = "";
         private static List<string> tracks;
         
         public static void Run(List<string> trackNames){
@@ -30,6 +31,11 @@ namespace yt2spotify{
             auth.Stop(0);
         }
 
+
+        public static void SetPlaylistName(string name){
+            playlistName = name;
+        }
+
         private static async void AuthOnAuthReceived(object sender, AuthorizationCode payload){
             AuthorizationCodeAuth auth = (AuthorizationCodeAuth) sender;
             auth.Stop();
@@ -41,20 +47,20 @@ namespace yt2spotify{
 
             };
 
-            string playlistid = await CreatePlaylist(api);
+            string playlistid = await CreatePlaylist(api, playlistName);
             List<string> songIDs = await GetSongIDs(api, tracks);
             await AddSongsToPlaylist(api, playlistId, songIDs);
         }
 
-        private static async Task<string> CreatePlaylist(SpotifyWebAPI api){
+        private static async Task<string> CreatePlaylist(SpotifyWebAPI api, string playlistName){
             PrivateProfile profile = await api.GetPrivateProfileAsync();
             string name = string.IsNullOrEmpty(profile.DisplayName) ? profile.Id : profile.DisplayName;
             profileId = profile.Id;
             Console.WriteLine($"Hello there, {name}!");
 
-            Console.WriteLine("Will create a new playlist with name \"Test xD\"");
+            Console.WriteLine("Will create a new playlist with name: " + playlistName);
             
-            FullPlaylist playlist = api.CreatePlaylist(profileId, "Test xD", false);
+            FullPlaylist playlist = api.CreatePlaylist(profileId, playlistName, false);
             if(!playlist.HasError())
             //Store the ID for future use
             playlistId = playlist.Id; 
