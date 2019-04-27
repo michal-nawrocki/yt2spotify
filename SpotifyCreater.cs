@@ -14,24 +14,18 @@ namespace yt2spotify{
 
         private static string profileId = "";
         private static string playlistId = "";
+        private static List<string> tracks;
         
-        static void run(string[] args){
-            Console.WriteLine("####### Spotify API Example #######");
-            Console.WriteLine("This example uses AuthorizationCodeAuth.");
+        public static void Run(List<string> trackNames){
 
-            AuthorizationCodeAuth auth =
-                new AuthorizationCodeAuth(Credentials.SP_id, Credentials.SP_key, "http://localhost:4002", "http://localhost:4002",
-                    Scope.PlaylistModifyPrivate);
+            tracks = trackNames;
+
+            AuthorizationCodeAuth auth = new AuthorizationCodeAuth(Credentials.SP_id, 
+                Credentials.SP_key, "http://localhost:4002", "http://localhost:4002", Scope.PlaylistModifyPrivate);
             auth.AuthReceived += AuthOnAuthReceived;
             auth.Start();
             auth.OpenBrowser();
-
-            // Do stuff here
-
-
-
-
-            // After this will close itself
+            
             Console.ReadLine();
             auth.Stop(0);
         }
@@ -41,15 +35,15 @@ namespace yt2spotify{
             auth.Stop();
 
             Token token = await auth.ExchangeCode(payload.Code);
-            SpotifyWebAPI api = new SpotifyWebAPI
-            {
+            SpotifyWebAPI api = new SpotifyWebAPI{
                 AccessToken = token.AccessToken,
                 TokenType = token.TokenType,
 
             };
+
             string playlistid = await CreatePlaylist(api);
-            string songid = await GetSongID(api, "Hallelujah");
-            await AddSongToPlaylist(api, playlistId, songid);
+            List<string> songIDs = await GetSongIDs(api, tracks);
+            await AddSongsToPlaylist(api, playlistId, songIDs);
         }
 
         private static async Task<string> CreatePlaylist(SpotifyWebAPI api){
@@ -76,9 +70,22 @@ namespace yt2spotify{
             foreach(var result in item.Tracks.Items){
                 Console.WriteLine("Name:" + result.Name 
                     + ", Author:" + result.Artists[0].Name + ", ID:" + result.Id);
+
+                return result.Uri;
             }
 
-            return item.Tracks.Items[2].Uri;
+            return "";
+        }
+
+        private static async Task<List<string>> GetSongIDs(SpotifyWebAPI api, List<string> trackNames){
+            List<string> trackIDs = new List<string>();
+
+            foreach(string track in trackNames){
+                string temp = await GetSongID(api, track);
+                if(temp.Length != 0) trackIDs.Add(temp);
+            }
+
+            return trackIDs;
         }
 
         private static async Task AddSongToPlaylist(SpotifyWebAPI api, string playlistID, string songID){

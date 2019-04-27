@@ -10,7 +10,8 @@ namespace yt2spotify{
             string URL = Console.ReadLine();
 
             List<string> trackNames = YTRetriever.GetTrackList(URL);
-                
+        
+            SpotifyCreater.Run(trackNames);
         }
     }
 }
